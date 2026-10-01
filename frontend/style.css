@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hospital Management System</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="loginPage" class="auth-screen active">
+      <div class="auth-card">
+        <div class="brand-block">
+          <div class="logo">+</div>
+          <h1>Hospital Management System</h1>
+          <p>Secure healthcare operations and patient care.</p>
+        </div>
+
+        <form id="loginForm">
+          <h2>Admin Login</h2>
+
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" value="admin@hospital.com" required />
+
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" value="admin123" required />
+
+          <button type="submit">Login</button>
+          <p id="loginError" class="error-message"></p>
+        </form>
+      </div>
+    </div>
+
+    <div id="appPage" class="app-shell hidden">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo small">+</div>
+          <h2>HMS</h2>
+        </div>
+
+        <nav>
+          <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+          <button class="nav-btn" data-section="patients">Patients</button>
+          <button class="nav-btn" data-section="doctors">Doctors</button>
+          <button class="nav-btn" data-section="appointments">Appointments</button>
+          <button class="nav-btn" data-section="records">Medical Records</button>
+          <button class="nav-btn" data-section="billing">Billing</button>
+        </nav>
+
+        <button id="logoutBtn" class="logout-btn">Logout</button>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Healthcare Overview</p>
+            <h3>Welcome, <span id="userName">Admin</span></h3>
+          </div>
+          <div class="status-pill">System Active</div>
+        </header>
+
+        <section id="dashboard" class="section active">
+          <div class="stats-grid">
+            <div class="stat-card purple">
+              <p>Total Patients</p>
+              <h2 id="totalPatients">0</h2>
+            </div>
+            <div class="stat-card orange">
+              <p>Total Doctors</p>
+              <h2 id="totalDoctors">0</h2>
+            </div>
+            <div class="stat-card purple">
+              <p>Appointments</p>
+              <h2 id="totalAppointments">0</h2>
+            </div>
+            <div class="stat-card orange">
+              <p>Pending Bills</p>
+              <h2 id="pendingBills">0</h2>
+            </div>
+          </div>
+
+          <div class="panel-grid">
+            <div class="panel">
+              <h4>Recent Patients</h4>
+              <ul id="recentPatientsList"></ul>
+            </div>
+            <div class="panel">
+              <h4>Upcoming Appointments</h4>
+              <ul id="appointmentsList"></ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="patients" class="section">
+          <div class="section-header">
+            <h3>Patients</h3>
+            <button id="addPatientBtn" class="primary-btn">Add Patient</button>
+          </div>
+
+          <div class="form-card hidden" id="patientFormCard">
+            <form id="patientForm">
+              <div class="input-grid">
+                <div>
+                  <label>Name</label>
+                  <input name="name" required />
+                </div>
+                <div>
+                  <label>Age</label>
+                  <input name="age" type="number" required />
+                </div>
+                <div>
+                  <label>Gender</label>
+                  <select name="gender">
+                    <option>Male</option>
+                    <option>Female</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Department</label>
+                  <input name="department" required />
+                </div>
+                <div>
+                  <label>Assigned Doctor</label>
+                  <input name="doctor" required />
+                </div>
+                <div>
+                  <label>Status</label>
+                  <select name="status">
+                    <option>Admitted</option>
+                    <option>Outpatient</option>
+                    <option>Recovery</option>
+                    <option>Discharged</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="primary-btn">Save Patient</button>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Age</th>
+                  <th>Department</th>
+                  <th>Doctor</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="patientsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="doctors" class="section">
+          <div class="section-header">
+            <h3>Doctors</h3>
+            <button id="addDoctorBtn" class="primary-btn">Add Doctor</button>
+          </div>
+
+          <div class="form-card hidden" id="doctorFormCard">
+            <form id="doctorForm">
+              <div class="input-grid">
+                <div>
+                  <label>Name</label>
+                  <input name="name" required />
+                </div>
+                <div>
+                  <label>Specialty</label>
+                  <input name="specialty" required />
+                </div>
+                <div>
+                  <label>Department</label>
+                  <input name="department" required />
+                </div>
+                <div>
+                  <label>Availability</label>
+                  <select name="availability">
+                    <option>Available</option>
+                    <option>On Duty</option>
+                    <option>Busy</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="primary-btn">Save Doctor</button>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Specialty</th>
+                  <th>Department</th>
+                  <th>Availability</th>
+                </tr>
+              </thead>
+              <tbody id="doctorsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="appointments" class="section">
+          <div class="section-header">
+            <h3>Appointments</h3>
+            <button id="addAppointmentBtn" class="primary-btn">Schedule</button>
+          </div>
+
+          <div class="form-card hidden" id="appointmentFormCard">
+            <form id="appointmentForm">
+              <div class="input-grid">
+                <div>
+                  <label>Patient</label>
+                  <input name="patient" required />
+                </div>
+                <div>
+                  <label>Doctor</label>
+                  <input name="doctor" required />
+                </div>
+                <div>
+                  <label>Date</label>
+                  <input type="date" name="date" required />
+                </div>
+                <div>
+                  <label>Time</label>
+                  <input name="time" value="09:00 AM" required />
+                </div>
+                <div>
+                  <label>Status</label>
+                  <select name="status">
+                    <option>Pending</option>
+                    <option>Confirmed</option>
+                    <option>Completed</option>
+                  </select>
+                </div>
+              </div>
+              <button type="submit" class="primary-btn">Save Appointment</button>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Doctor</th>
+                  <th>Date</th>
+                  <th>Time</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="appointmentsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="records" class="section">
+          <div class="section-header">
+            <h3>Medical Records</h3>
+            <button id="addRecordBtn" class="primary-btn">Add Record</button>
+          </div>
+
+          <div class="form-card hidden" id="recordFormCard">
+            <form id="recordForm">
+              <div class="input-grid">
+                <div>
+                  <label>Patient</label>
+                  <input name="patient" required />
+                </div>
+                <div>
+                  <label>Diagnosis</label>
+                  <input name="diagnosis" required />
+                </div>
+                <div>
+                  <label>Treatment</label>
+                  <input name="treatment" required />
+                </div>
+                <div>
+                  <label>Doctor</label>
+                  <input name="doctor" required />
+                </div>
+              </div>
+              <button type="submit" class="primary-btn">Save Record</button>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Diagnosis</th>
+                  <th>Treatment</th>
+                  <th>Doctor</th>
+                </tr>
+              </thead>
+              <tbody id="recordsTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section id="billing" class="section">
+          <div class="section-header">
+            <h3>Billing</h3>
+            <button id="addBillBtn" class="primary-btn">Add Bill</button>
+          </div>
+
+          <div class="form-card hidden" id="billingFormCard">
+            <form id="billingForm">
+              <div class="input-grid">
+                <div>
+                  <label>Patient</label>
+                  <input name="patient" required />
+                </div>
+                <div>
+                  <label>Amount</label>
+                  <input name="amount" type="number" required />
+                </div>
+                <div>
+                  <label>Status</label>
+                  <select name="status">
+                    <option>Paid</option>
+                    <option>Pending</option>
+                  </select>
+                </div>
+                <div>
+                  <label>Date</label>
+                  <input type="date" name="date" required />
+                </div>
+              </div>
+              <button type="submit" class="primary-btn">Save Bill</button>
+            </form>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>Patient</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="billingTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

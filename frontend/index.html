@@ -1,0 +1,244 @@
+const express = require('express');
+const cors = require('cors');
+const helmet = require('helmet');
+const dotenv = require('dotenv');
+const path = require('path');
+const { Client } = require('pg');
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(helmet());
+app.use(express.json());
+
+const defaultPatients = [
+  { id: 1, name: 'Aisha Khan', age: 29, gender: 'Female', department: 'Cardiology', doctor: 'Dr. John Smith', status: 'Admitted' },
+  { id: 2, name: 'Mohammed Ali', age: 42, gender: 'Male', department: 'Neurology', doctor: 'Dr. Emma White', status: 'Outpatient' },
+  { id: 3, name: 'Sara Ahmed', age: 35, gender: 'Female', department: 'Orthopedics', doctor: 'Dr. Daniel Lee', status: 'Recovery' },
+  { id: 4, name: 'Omar Hassan', age: 56, gender: 'Male', department: 'General Medicine', doctor: 'Dr. Olivia Green', status: 'Discharged' }
+];
+
+const defaultDoctors = [
+  { id: 1, name: 'Dr. John Smith', specialty: 'Cardiology', department: 'Cardiology', availability: 'Available' },
+  { id: 2, name: 'Dr. Emma White', specialty: 'Neurology', department: 'Neurology', availability: 'On Duty' },
+  { id: 3, name: 'Dr. Daniel Lee', specialty: 'Orthopedics', department: 'Orthopedics', availability: 'Available' },
+  { id: 4, name: 'Dr. Olivia Green', specialty: 'General Medicine', department: 'General Medicine', availability: 'Busy' }
+];
+
+const defaultAppointments = [
+  { id: 1, patient: 'Aisha Khan', doctor: 'Dr. John Smith', date: '2026-10-03', time: '09:30 AM', status: 'Confirmed' },
+  { id: 2, patient: 'Mohammed Ali', doctor: 'Dr. Emma White', date: '2026-10-03', time: '11:00 AM', status: 'Pending' },
+  { id: 3, patient: 'Sara Ahmed', doctor: 'Dr. Daniel Lee', date: '2026-10-04', time: '02:15 PM', status: 'Confirmed' }
+];
+
+const defaultBills = [
+  { id: 1, patient: 'Aisha Khan', amount: 2500, status: 'Paid', date: '2026-10-01' },
+  { id: 2, patient: 'Mohammed Ali', amount: 1800, status: 'Pending', date: '2026-10-01' },
+  { id: 3, patient: 'Sara Ahmed', amount: 3200, status: 'Paid', date: '2026-10-02' }
+];
+
+const defaultRecords = [
+  { id: 1, patient: 'Aisha Khan', diagnosis: 'Hypertension', treatment: 'Medication and monitoring', doctor: 'Dr. John Smith' },
+  { id: 2, patient: 'Mohammed Ali', diagnosis: 'Migraine', treatment: 'Neurological consult and rest', doctor: 'Dr. Emma White' },
+  { id: 3, patient: 'Sara Ahmed', diagnosis: 'Knee strain', treatment: 'Physiotherapy and medication', doctor: 'Dr. Daniel Lee' }
+];
+
+let appState = {
+  patients: [...defaultPatients],
+  doctors: [...defaultDoctors],
+  appointments: [...defaultAppointments],
+  bills: [...defaultBills],
+  records: [...defaultRecords]
+};
+
+const usePostgres = !!(process.env.DB_HOST && process.env.DB_NAME);
+let postgresClient = null;
+
+async function getDbClient() {
+  if (!usePostgres) return null;
+  if (!postgresClient) {
+    postgresClient = new Client({
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME
+    });
+
+    await postgresClient.connect().catch((err) => {
+      console.error('PostgreSQL connection failed:', err.message);
+      postgresClient = null;
+    });
+  }
+  return postgresClient;
+}
+
+function buildDashboardSummary() {
+  return {
+    totalPatients: appState.patients.length,
+    totalDoctors: appState.doctors.length,
+    totalAppointments: appState.appointments.length,
+    totalBills: appState.bills.length,
+    pendingBills: appState.bills.filter((bill) => bill.status === 'Pending').length,
+    activeDoctors: appState.doctors.filter((doctor) => doctor.availability === 'Available').length
+  };
+}
+
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Hospital Management System API is running', database: usePostgres ? 'postgresql' : 'demo' });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body;
+
+  if (email === 'admin@hospital.com' && password === 'admin123') {
+    return res.json({
+      success: true,
+      role: 'admin',
+      user: { name: 'Mohamed Masood', email, role: 'admin' },
+      token: 'demo-admin-token'
+    });
+  }
+
+  return res.status(401).json({ success: false, message: 'Invalid credentials' });
+});
+
+app.get('/api/dashboard', (req, res) => {
+  res.json(buildDashboardSummary());
+});
+
+app.get('/api/patients', (req, res) => {
+  res.json(appState.patients);
+});
+
+app.post('/api/patients', (req, res) => {
+  const { name, age, gender, department, doctor, status } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Patient name is required' });
+  }
+
+  const newPatient = {
+    id: Date.now(),
+    name,
+    age: Number(age) || 0,
+    gender: gender || 'Unknown',
+    department: department || 'General Medicine',
+    doctor: doctor || 'Unassigned',
+    status: status || 'Pending'
+  };
+
+  appState.patients.unshift(newPatient);
+  return res.status(201).json(newPatient);
+});
+
+app.get('/api/doctors', (req, res) => {
+  res.json(appState.doctors);
+});
+
+app.post('/api/doctors', (req, res) => {
+  const { name, specialty, department, availability } = req.body;
+
+  if (!name) {
+    return res.status(400).json({ message: 'Doctor name is required' });
+  }
+
+  const newDoctor = {
+    id: Date.now(),
+    name,
+    specialty: specialty || 'General Practice',
+    department: department || 'General Medicine',
+    availability: availability || 'Available'
+  };
+
+  appState.doctors.push(newDoctor);
+  return res.status(201).json(newDoctor);
+});
+
+app.get('/api/appointments', (req, res) => {
+  res.json(appState.appointments);
+});
+
+app.post('/api/appointments', (req, res) => {
+  const { patient, doctor, date, time, status } = req.body;
+
+  if (!patient || !doctor || !date) {
+    return res.status(400).json({ message: 'Patient, doctor, and date are required' });
+  }
+
+  const newAppointment = {
+    id: Date.now(),
+    patient,
+    doctor,
+    date,
+    time: time || '09:00 AM',
+    status: status || 'Pending'
+  };
+
+  appState.appointments.push(newAppointment);
+  return res.status(201).json(newAppointment);
+});
+
+app.get('/api/billing', (req, res) => {
+  res.json(appState.bills);
+});
+
+app.post('/api/bills', (req, res) => {
+  const { patient, amount, status, date } = req.body;
+
+  if (!patient || !amount) {
+    return res.status(400).json({ message: 'Patient and amount are required' });
+  }
+
+  const newBill = {
+    id: Date.now(),
+    patient,
+    amount: Number(amount),
+    status: status || 'Pending',
+    date: date || new Date().toISOString().slice(0, 10)
+  };
+
+  appState.bills.push(newBill);
+  return res.status(201).json(newBill);
+});
+
+app.get('/api/records', (req, res) => {
+  res.json(appState.records);
+});
+
+app.post('/api/records', (req, res) => {
+  const { patient, diagnosis, treatment, doctor } = req.body;
+
+  if (!patient || !diagnosis) {
+    return res.status(400).json({ message: 'Patient and diagnosis are required' });
+  }
+
+  const newRecord = {
+    id: Date.now(),
+    patient,
+    diagnosis,
+    treatment: treatment || 'Follow-up recommended',
+    doctor: doctor || 'Assigned doctor'
+  };
+
+  appState.records.push(newRecord);
+  return res.status(201).json(newRecord);
+});
+
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend', 'index.html'));
+});
+
+app.listen(PORT, () => {
+  console.log(`Hospital Management System running on http://localhost:${PORT}`);
+  if (usePostgres) {
+    console.log('PostgreSQL connection enabled');
+  } else {
+    console.log('Demo mode active: in-memory data store is being used');
+  }
+});
